@@ -1,16 +1,30 @@
 import customtkinter
+import binascii
+import time
+import serial.tools.list_ports
+import serial
+import struct
+
+from serial_ import Communication
 
 
 class servo_control_row(customtkinter.CTkFrame):
-    def __init__(self, master, servo_id):
+    def __init__(self, master, servo_id: int):
         super().__init__(master, width=310)
+
+        self.servo_id = servo_id
+
+        self.angle = 180
+
+        # 打开串口通信
+        self.serial_engine = Communication(
+            "/dev/cu.usbserial-1120", 115200, 0.5, DEBUG=False
+        )
 
         self.grid_columnconfigure((0, 1, 2), weight=1)
 
-        self.servo_label = customtkinter.CTkLabel(
-            self, text="Servo " + "{:02}".format(servo_id)
-        )
-        self.servo_label.grid(row=0, column=0, padx=(10, 0), pady=5, stick="w")
+        # 定义需要用到的控件
+        self.servo_label = customtkinter.CTkLabel(self, text=f"Servo {servo_id}")
 
         self.angle_slider = customtkinter.CTkSlider(
             self,
@@ -18,25 +32,24 @@ class servo_control_row(customtkinter.CTkFrame):
             to=180,
             command=self.slider_handel,
             number_of_steps=180,
-            hover=True,
+            hover=False,
         )
-        self.angle_slider.grid(row=0, column=1, padx=5, pady=5, stick="we")
 
-        self.servo_angle_label = customtkinter.CTkLabel(self, text="090", width=20)
+        self.servo_angle_label = customtkinter.CTkLabel(self, text="180", width=20)
+
+        # 控件布局
+        self.servo_label.grid(row=0, column=0, padx=(10, 0), pady=5, stick="w")
+        self.angle_slider.grid(row=0, column=1, padx=5, pady=5, stick="we")
         self.servo_angle_label.grid(row=0, column=2, padx=(0, 10), pady=5, stick="wsne")
 
-        # self.servo_angle_label.configure(command=self.set_label_text)
-
-    def get_slider_value(self):
-        return str(int(self.angle_slider.get()))
-
-    def set_label_text(self):
-        angle_float = self.get_slider_value
-        self.servo_angle_label.configure(text=angle_float)
-
     def slider_handel(self, value):
-        angle_float = self.angle_slider.get()
-        self.servo_angle_label.configure(text="{:03}".format(int(angle_float)))
+        value = int(value)
+        self.servo_angle_label.configure(text=str(value))
+        if str(value) == "180" or str(value) == "0":
+            return
+        print(f"Set {self.servo_id}, angle: {value}")
+        self.serial_engine.send_servo_command(value, servo_id=self.servo_id)
+        time.sleep(0.02)
 
 
 class controlsFrame(customtkinter.CTkFrame):
@@ -46,6 +59,9 @@ class controlsFrame(customtkinter.CTkFrame):
         self.lists = []
 
         for i, v in enumerate(values):
-            conline = servo_control_row(self, i)
-            conline.grid(row=i, column=0, padx=5, pady=(10, 0))
+            conline = servo_control_row(self, v)
+            conline.grid(
+                row=i, column=0, padx=5, pady=(10, 0 if i != len(values) - 1 else 10)
+            )
+
             self.lists.append(conline)
