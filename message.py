@@ -5,6 +5,7 @@ from Device import DeviceNotFoundError
 import logging
 import time
 from const import ADDRESS, CHARACTERISTIC
+import sys
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -13,6 +14,7 @@ logging.basicConfig(level=logging.INFO)
 class messageFram(customtkinter.CTkFrame):
     def __init__(self, master, loop):
         super().__init__(master)
+        self.fontSetting = master.fontSetting
 
         # 设置grid布局权重
         self.grid_columnconfigure(0, weight=1)
@@ -23,7 +25,9 @@ class messageFram(customtkinter.CTkFrame):
         self.CHARACTERISTIC = "0000ffe1-0000-1000-8000-00805f9b34fb"
         self.MAX_MESSAGE = 5
 
-        self.label = customtkinter.CTkLabel(self, text="MessageBox")
+        self.label = customtkinter.CTkLabel(
+            self, text="MessageBox", font=self.fontSetting
+        )
         self.label.grid(
             row=0, column=0, columnspan=2, padx=10, pady=(10, 0), sticky="w"
         )
@@ -42,7 +46,9 @@ class messageFram(customtkinter.CTkFrame):
             row=2, column=0, columnspan=2, padx=10, pady=(10, 0), sticky="we"
         )
 
-        self.sendMessageLabel = customtkinter.CTkLabel(self, text="Send Message")
+        self.sendMessageLabel = customtkinter.CTkLabel(
+            self, text="Send Message", font=self.fontSetting
+        )
         self.sendMessageLabel.grid(
             row=3, column=0, columnspan=2, padx=10, pady=(10, 0), sticky="w"
         )
@@ -50,7 +56,9 @@ class messageFram(customtkinter.CTkFrame):
         self.sendMessage = customtkinter.CTkEntry(self)
         self.sendMessage.grid(row=4, column=0, padx=10, pady=(10, 0), sticky="we")
 
-        self.hexSend = customtkinter.CTkCheckBox(self, text="Hex")
+        self.hexSend = customtkinter.CTkCheckBox(
+            self, text="Hex", font=self.fontSetting
+        )
         self.hexSend.grid(row=4, column=1, padx=10, pady=(10, 0), sticky="we")
 
         self.sendButton = customtkinter.CTkButton(
@@ -83,7 +91,7 @@ class messageBox(customtkinter.CTkScrollableFrame):
 
         self.device_list = []
         self.device_list_item = []
-        
+
         # 消息队列
         self.message_queue = asyncio.Queue()
 
@@ -112,11 +120,8 @@ class messageBox(customtkinter.CTkScrollableFrame):
             compound="left",
             bg_color="white",
         )
-        msg_row.grid(
-            row=self.msg_pointer, column=0, padx=5, pady=(5, 0), sticky="nw"
-        )
-        self.msg_pointer+=1
-        
+        msg_row.grid(row=self.msg_pointer, column=0, padx=5, pady=(5, 0), sticky="nw")
+        self.msg_pointer += 1
 
     async def run_ble_client(self, queue: asyncio.Queue):
         logger.info("starting scan...")

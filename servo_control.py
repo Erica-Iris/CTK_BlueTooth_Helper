@@ -4,7 +4,7 @@ import time
 import serial.tools.list_ports
 import serial
 import struct
-
+from tkinter import IntVar
 from serial_ import Communication
 
 
@@ -12,9 +12,11 @@ class servo_control_row(customtkinter.CTkFrame):
     def __init__(self, master, servo_id: int):
         super().__init__(master, width=310)
 
+        self.fontSetting = master.fontSetting
+
         self.servo_id = servo_id
 
-        self.angle = 180
+        self.angle = IntVar()
 
         # 打开串口通信
         self.serial_engine = Communication(
@@ -33,7 +35,9 @@ class servo_control_row(customtkinter.CTkFrame):
             command=self.slider_handel,
             number_of_steps=180,
             hover=False,
+            variable=self.angle,
         )
+        self.angle_slider.set(180)
 
         self.servo_angle_label = customtkinter.CTkLabel(self, text="180", width=20)
 
@@ -42,19 +46,32 @@ class servo_control_row(customtkinter.CTkFrame):
         self.angle_slider.grid(row=0, column=1, padx=5, pady=5, stick="we")
         self.servo_angle_label.grid(row=0, column=2, padx=(0, 10), pady=5, stick="wsne")
 
-    def slider_handel(self, value):
-        value = int(value)
-        self.servo_angle_label.configure(text=str(value))
-        if str(value) == "180" or str(value) == "0":
+    # def slider_handel(self,value):
+    #     value = int(value)
+    #     self.servo_angle_label.configure(text=str(value))
+    #     if str(value) == "180" or str(value) == "0":
+    #         return
+    #     print(f"Set {self.servo_id}, angle: {value}")
+    #     time.sleep(0.02)
+
+    def slider_handel(self, _):
+        angle = self.angle.get()
+        print(f"value of slider is {angle}")
+        self.servo_angle_label.configure(text=str(angle))
+        if angle == 180 or angle == 0:
             return
-        print(f"Set {self.servo_id}, angle: {value}")
-        self.serial_engine.send_servo_command(value, servo_id=self.servo_id)
+        try:
+            self.serial_engine.send_servo_command(angle=angle, servo_id=self.servo_id)
+        except Exception as e:
+            print(e)
         time.sleep(0.02)
 
 
 class controlsFrame(customtkinter.CTkFrame):
     def __init__(self, master, values):
         super().__init__(master, width=320)
+
+        self.fontSetting = master.fontSetting
 
         self.lists = []
 

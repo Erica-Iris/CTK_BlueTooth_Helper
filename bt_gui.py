@@ -1,36 +1,63 @@
-import asyncio
-from typing import Any, Callable, Literal, Tuple, Union
-from typing_extensions import Literal
-import customtkinter
-from bluetooth import BluetoothBox
-from servo_control import controlsFrame
-from message import messageFram
+"""
+Servo control tool
+Author: 1ris_W()
+Version: 0.1
+"""
+
+try:
+    import asyncio
+    import os
+    import logging
+    import sys
+    from typing import Any, Callable, Literal, Tuple, Union
+    from typing_extensions import Literal
+    import customtkinter
+    from deviceBox import deviceBox
+    from servo_control import controlsFrame
+    from message import messageFram
+    from deviceBox import deviceBox
+except Exception as e:
+    import os
+
+    os.system("pip install -r requirements.txt")
 
 customtkinter.set_appearance_mode("light")
+customtkinter.set_default_color_theme("blue")
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 class App(customtkinter.CTk):
+
+    DIRPATH = os.path.join(os.path.dirname(__file__))
+
     def __init__(self, loop: asyncio.AbstractEventLoop):
         super().__init__()
+        if sys.platform.startswith("win"):
+            self.font = "Segoe UI"
+        else:
+            self.font = customtkinter.ThemeManager.theme["CTkFont"]["family"]
+        self.fontSetting = (self.font, 17, "bold")
 
         self.grid_columnconfigure((1, 2), weight=1)
         self.grid_rowconfigure(0, weight=1)
 
-        self.title("舵机调试工具 B20041230")
-        # self.geometry("1110x560")
+        self.title("Servo Testing Toolkit")
+        self.width = int(self.winfo_screenwidth() / 2)
+        self.height = int(self.winfo_screenheight() / 1.5)
+        self.geometry(f"{self.width}x{self.height}")
+        self.minsize(880, 800)
 
         self.controls_frame = controlsFrame(
             self, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
         )
-        self.controls_frame.grid(
-            row=0, column=0, padx=(10, 0), pady=(10, 10), sticky="nsew"
-        )
+        self.messageBox = messageFram(self, loop)
+        self.bluetoothBox = deviceBox(self)
 
-        self.messBox = messageFram(self, loop)
-        self.messBox.grid(row=0, column=1, padx=(10, 0), pady=(10, 10), sticky="nsew")
-
-        self.bluetoothBox = BluetoothBox(self)
-        self.bluetoothBox.grid(row=0, column=2, padx=10, pady=(10, 10), sticky="nsew")
+        self.controls_frame.grid(row=0, column=0, padx=(10, 0), pady=10, sticky="news")
+        self.messageBox.grid(row=0, column=1, padx=(10, 0), pady=10, sticky="news")
+        self.bluetoothBox.grid(row=0, column=2, padx=10, pady=10, sticky="news")
 
 
 loop = asyncio.get_event_loop()
