@@ -7,13 +7,13 @@ Version: 0.1
 try:
     import asyncio
     import os
-    import logging
+    import structlog
     import sys
     import customtkinter
     from deviceBox import deviceBox
+    from deviceBox import deviceBox
     from servo_control import controlsFrame
     from message import messageFram
-    from deviceBox import deviceBox
 except Exception as e:
     import os
 
@@ -22,8 +22,7 @@ except Exception as e:
 customtkinter.set_appearance_mode("light")
 customtkinter.set_default_color_theme("./purple.json")
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+log = structlog.get_logger()
 
 
 class App(customtkinter.CTk):
@@ -36,6 +35,7 @@ class App(customtkinter.CTk):
             self.font = "Segoe UI"
         else:
             self.font = customtkinter.ThemeManager.theme["CTkFont"]["family"]
+
         self.fontSetting = (self.font, 17, "bold")
 
         self.grid_columnconfigure((1, 2), weight=1)
@@ -48,7 +48,7 @@ class App(customtkinter.CTk):
         self.minsize(880, 800)
 
         self.device = None
-        
+
         self.controls_frame = controlsFrame(
             self, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
         )
@@ -58,6 +58,10 @@ class App(customtkinter.CTk):
         self.controls_frame.grid(row=0, column=0, padx=(10, 0), pady=10, sticky="news")
         self.messageBox.grid(row=0, column=1, padx=(10, 0), pady=10, sticky="news")
         self.bluetoothBox.grid(row=0, column=2, padx=10, pady=10, sticky="news")
+        
+        os.system("clear")
+        
+        log.info("App loadding done.")
 
 
 loop = asyncio.get_event_loop()
