@@ -1,0 +1,9 @@
+# requirements.txt
+
+customtkinter==5.2.2
+darkdetect==0.8.0
+future==1.0.0
+bleak==0.21.1
+customtkinter==5.2.2
+future==1.0.0
+pyserial==3.5
