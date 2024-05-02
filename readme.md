@@ -18,4 +18,8 @@ python main.py
 
 3. Select the BLE/Serial device and connect to it
 
-![mainWindow](./assets/mainWindow.png)
+![](./assets/mainWindow.png)
+
+4. Scan the available serial devices
+
+![](./assets/scanSerial.png)
