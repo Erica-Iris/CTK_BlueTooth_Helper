@@ -28,53 +28,46 @@ class messageFram(customtkinter.CTkFrame):
         self.label = customtkinter.CTkLabel(
             self, text="MessageBox", font=self.fontSetting
         )
-        self.label.grid(
-            row=0, column=0, columnspan=2, padx=10, pady=(10, 0), sticky="w"
-        )
-
         self.messageBox = messageBox(
             self, address=ADDRESS, characteristic=CHARACTERISTIC, loop=loop
         )
-        self.messageBox.grid(
-            row=1, column=0, columnspan=2, padx=10, pady=(10, 0), sticky="news"
-        )
-
         self.listen_button = customtkinter.CTkButton(
-            self, text="Start Listen", command=self.listen_button_handler
+            self, text="Start Listen", font=self.fontSetting
         )
-        self.listen_button.grid(
-            row=2, column=0, columnspan=2, padx=10, pady=(10, 0), sticky="we"
-        )
-
         self.sendMessageLabel = customtkinter.CTkLabel(
             self, text="Send Message", font=self.fontSetting
         )
-        self.sendMessageLabel.grid(
-            row=3, column=0, columnspan=2, padx=10, pady=(10, 0), sticky="w"
-        )
-
         self.sendMessage = customtkinter.CTkEntry(self)
         self.sendMessage.grid(row=4, column=0, padx=10, pady=(10, 0), sticky="we")
 
         self.hexSend = customtkinter.CTkCheckBox(
             self, text="Hex", font=self.fontSetting
         )
-        self.hexSend.grid(row=4, column=1, padx=10, pady=(10, 0), sticky="we")
-
         self.sendButton = customtkinter.CTkButton(
-            self, text="Send Message", command=self.send_msg
+            self, text="Send Message", command=self.send_msg, font=self.fontSetting
         )
+
+        self.label.grid(
+            row=0, column=0, columnspan=2, padx=10, pady=(10, 0), sticky="w"
+        )
+        self.messageBox.grid(
+            row=1, column=0, columnspan=2, padx=10, pady=(10, 0), sticky="news"
+        )
+        self.listen_button.grid(
+            row=2, column=0, columnspan=2, padx=10, pady=(10, 0), sticky="ew"
+        )
+        self.sendMessageLabel.grid(
+            row=3, column=0, columnspan=2, padx=10, pady=(10, 0), sticky="w"
+        )
+        self.hexSend.grid(row=4, column=1, padx=10, pady=(10, 0), sticky="ew")
         self.sendButton.grid(
-            row=6, column=0, columnspan=2, padx=10, pady=10, sticky="we"
+            row=6, column=0, columnspan=2, padx=10, pady=10, sticky="ew"
         )
 
     def send_msg(self):
         # get value from entry and send it to the device
         message = self.sendMessage.get()
         print(message)
-
-    async def listen_button_handler(self):
-        await self.messageBox.stop()
 
 
 class messageBox(customtkinter.CTkScrollableFrame):

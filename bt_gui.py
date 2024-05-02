@@ -9,8 +9,6 @@ try:
     import os
     import logging
     import sys
-    from typing import Any, Callable, Literal, Tuple, Union
-    from typing_extensions import Literal
     import customtkinter
     from deviceBox import deviceBox
     from servo_control import controlsFrame
@@ -22,7 +20,7 @@ except Exception as e:
     os.system("pip install -r requirements.txt")
 
 customtkinter.set_appearance_mode("light")
-customtkinter.set_default_color_theme("blue")
+customtkinter.set_default_color_theme("./purple.json")
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -49,6 +47,8 @@ class App(customtkinter.CTk):
         self.geometry(f"{self.width}x{self.height}")
         self.minsize(880, 800)
 
+        self.device = None
+        
         self.controls_frame = controlsFrame(
             self, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
         )
