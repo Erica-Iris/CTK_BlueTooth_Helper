@@ -35,7 +35,7 @@
       "#704AF6"
     ],
     "hover_color": [
-      "#36719F",
+      "#67439C",
       "#4527A0"
     ],
     "border_color": [
@@ -149,7 +149,7 @@
       "#949A9F"
     ],
     "hover_color": [
-      "#36719F",
+      "#67439C",
       "#4527A0"
     ],
     "text_color": [
@@ -210,8 +210,8 @@
       "#4527A0"
     ],
     "button_hover_color": [
-      "#27577D",
-      "#203A4F"
+      "#67439C",
+      "#5E35B1"
     ],
     "text_color": [
       "#DCE4EE",
@@ -275,7 +275,7 @@
       "#5E35B1"
     ],
     "selected_hover_color": [
-      "#36719F",
+      "#5E35B1",
       "#4527A0"
     ],
     "unselected_color": [
