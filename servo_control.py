@@ -4,8 +4,10 @@ import time
 import serial.tools.list_ports
 import serial
 import struct
-from tkinter import IntVar
+import structlog
 from serial_ import Communication
+
+log = structlog.get_logger()
 
 
 class servo_control_row(customtkinter.CTkFrame):
@@ -16,11 +18,11 @@ class servo_control_row(customtkinter.CTkFrame):
 
         self.servo_id = servo_id
 
-        self.angle = IntVar()
+        self.angle = customtkinter.IntVar()
 
         # 打开串口通信
         self.serial_engine = Communication(
-            "/dev/cu.usbserial-1120", 115200, 0.5, DEBUG=False
+            "/dev/cu.usbserial-11120", 115200, 0.5, DEBUG=False
         )
 
         self.grid_columnconfigure((0, 1, 2), weight=1)
@@ -46,24 +48,16 @@ class servo_control_row(customtkinter.CTkFrame):
         self.angle_slider.grid(row=0, column=1, padx=5, pady=5, stick="we")
         self.servo_angle_label.grid(row=0, column=2, padx=(0, 10), pady=5, stick="wsne")
 
-    # def slider_handel(self,value):
-    #     value = int(value)
-    #     self.servo_angle_label.configure(text=str(value))
-    #     if str(value) == "180" or str(value) == "0":
-    #         return
-    #     print(f"Set {self.servo_id}, angle: {value}")
-    #     time.sleep(0.02)
-
     def slider_handel(self, _):
         angle = self.angle.get()
-        print(f"value of slider is {angle}")
+        log.info(f"Value of slider is {angle}.")
         self.servo_angle_label.configure(text=str(angle))
         if angle == 180 or angle == 0:
             return
         try:
             self.serial_engine.send_servo_command(angle=angle, servo_id=self.servo_id)
         except Exception as e:
-            print(e)
+            log.info(e)
         time.sleep(0.02)
 
 

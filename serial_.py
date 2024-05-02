@@ -1,12 +1,11 @@
 import binascii
 import time
-import serial.tools.list_ports
 import serial
 import struct
+import structlog
 
-ports_list = list(serial.tools.list_ports.comports())
-for comport in ports_list:
-    print(comport[0], comport[1])
+
+log = structlog.get_logger()
 
 
 class Communication:
@@ -25,22 +24,22 @@ class Communication:
             if self.main_engine.is_open:
                 Ret = True
         except Exception as e:
-            print("---异常---：", e)
+            log.info(f"---异常---：{e}")
 
     # 打印设备基本信息
     def Print_Name(self):
-        print(self.main_engine.name)  # 设备名字
-        print(self.main_engine.port)  # 读或者写端口
-        print(self.main_engine.baudrate)  # 波特率
-        print(self.main_engine.bytesize)  # 字节大小
-        print(self.main_engine.parity)  # 校验位
-        print(self.main_engine.stopbits)  # 停止位
-        print(self.main_engine.timeout)  # 读超时设置
-        print(self.main_engine.writeTimeout)  # 写超时
-        print(self.main_engine.xonxoff)  # 软件流控
-        print(self.main_engine.rtscts)  # 软件流控
-        print(self.main_engine.dsrdtr)  # 硬件流控
-        print(self.main_engine.interCharTimeout)  # 字符间隔超时
+        log.info(self.main_engine.name)  # 设备名字
+        log.info(self.main_engine.port)  # 读或者写端口
+        log.info(self.main_engine.baudrate)  # 波特率
+        log.info(self.main_engine.bytesize)  # 字节大小
+        log.info(self.main_engine.parity)  # 校验位
+        log.info(self.main_engine.stopbits)  # 停止位
+        log.info(self.main_engine.timeout)  # 读超时设置
+        log.info(self.main_engine.writeTimeout)  # 写超时
+        log.info(self.main_engine.xonxoff)  # 软件流控
+        log.info(self.main_engine.rtscts)  # 软件流控
+        log.info(self.main_engine.dsrdtr)  # 硬件流控
+        log.info(self.main_engine.interCharTimeout)  # 字符间隔超时
 
     # 打开串口
     def Open_Engine(self):
@@ -49,13 +48,13 @@ class Communication:
     # 关闭串口
     def Close_Engine(self):
         self.main_engine.close()
-        print(self.main_engine.is_open)  # 检验串口是否打开
+        log.info("Serial status: %s", self.main_engine.is_open)
 
     # 打印可用串口列表
     @staticmethod
     def Print_Used_Com():
         port_list = list(serial.tools.list_ports.comports())
-        print(port_list)
+        log.info(port_list)
 
     # 接收指定大小的数据
     # 从串口读size个字节。如果指定超时，则可能在超时后返回较少的字节；如果没有指定超时，则会一直等到收完指定的字节数。
@@ -72,16 +71,16 @@ class Communication:
     def Send_data(self, data):
         self.main_engine.write(data)
 
-    def Recive_data(self, way):
+    def Recive_data(self, way=1):
         # 循环接收数据，此为死循环，可用线程实现
-        print("开始接收数据：")
+        log.info("Start listening data from serial.")
         while True:
             try:
                 # 一个字节一个字节的接收
                 if self.main_engine.in_waiting:
                     if way == 0:
                         for i in range(self.main_engine.in_waiting):
-                            print("接收ascii数据：" + str(self.Read_Size(1)))
+                            log.info("接收ascii数据：" + str(self.Read_Size(1)))
                             data1 = self.Read_Size(1).hex()  # 转为十六进制
                             data2 = int(
                                 data1, 16
@@ -90,31 +89,20 @@ class Communication:
                         # 整体接收
                         # data = self.main_engine.read(self.main_engine.in_waiting).decode("utf-8")#方式一
                         data = self.main_engine.read_all()  # 方式二
-                        print("接收ascii数据：", data)
+                        log.info(f"Receive data from serial: {data}.")
             except Exception as e:
-                print("异常报错：", e)
+                log.error("异常报错：%s", e)
 
     def send_servo_command(self, angle, servo_id=1):
         angle = int(angle)
         if not (0 <= servo_id <= 10) or not (0 <= angle <= 180):
-            print("Invalid servo_id or angle")
+            log.info("Invalid servo_id or angle.")
             return
         checksum = (0xAA + servo_id + angle) & 0xFF
         packet = struct.pack("BBBB", 0xAA, servo_id, angle, checksum)
         if self.DEBUG:
-            print(f"发送的角度： {checksum}. servo_id: {servo_id}, angle: {angle}")
-            print(binascii.hexlify(packet))
+            log.info(f"发送的角度： {checksum}. servo_id: {servo_id}, angle: {angle}.")
         self.main_engine.write(packet)
-
-    def test_servo(self, port, start_angle, end_angle):
-        if start_angle < end_angle:
-            for i in range(start_angle, end_angle):
-                self.send_servo_command(servo_id=port, angle=i)
-                time.sleep(0.01)
-        else:
-            for i in range(start_angle, end_angle, -1):
-                self.send_servo_command(servo_id=port, angle=i)
-                time.sleep(0.01)
 
 
 # 食指 1 95-180
@@ -123,14 +111,12 @@ if __name__ == "__main__":
     Communication.Print_Used_Com()
     Ret = False  # 是否创建成功标志
 
-    # Engine1 = Communication("/dev/cu.usbserial-11120", 460800, 0.5)
     Engine1 = Communication("/dev/cu.usbserial-111420", 9600, 0.5)
     if Ret:
         # Engine1.Recive_data(1)
         Engine1.Print_Used_Com()
         while True:
-            Engine1.test_servo(1, 110, 180)
-            Engine1.test_servo(1, 180, 110)
+            Engine1.Recive_data(way=1)
 
     # 更多示例
     # self.main_engine.write(chr(0x06).encode("utf-8"))  # 十六制发送一个数据

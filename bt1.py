@@ -3,6 +3,9 @@ from bleak import BleakScanner
 from bleak import BleakClient
 from bleak import _logger as logger
 import time
+import structlog
+
+log = structlog.get_logger()
 
 UID_1 = "B5C7752B-8135-435E-CF59-3A14B7E1704C"
 
@@ -31,7 +34,7 @@ async def read_data(address):
 
 
 async def notification_handler(sender, data):
-    print("Sender:", sender)
+    log.info("Sender:", sender)
 
 
 async def main(address):

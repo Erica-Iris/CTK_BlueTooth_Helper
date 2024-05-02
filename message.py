@@ -1,14 +1,18 @@
 import asyncio
 import customtkinter
+import logging
+import structlog
+import sys
+import serial
+import time
+import threading
+from const import ADDRESS, CHARACTERISTIC
 from bleak import BleakScanner, BleakClient
 from Device import DeviceNotFoundError
-import logging
-import time
-from const import ADDRESS, CHARACTERISTIC
-import sys
+from serial_ import Communication
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+
+log = structlog.get_logger()
 
 
 class messageFram(customtkinter.CTkFrame):
@@ -25,21 +29,21 @@ class messageFram(customtkinter.CTkFrame):
         self.CHARACTERISTIC = "0000ffe1-0000-1000-8000-00805f9b34fb"
         self.MAX_MESSAGE = 5
 
+        self.device = self.master.device
+
         self.label = customtkinter.CTkLabel(
             self, text="MessageBox", font=self.fontSetting
         )
         self.messageBox = messageBox(
             self, address=ADDRESS, characteristic=CHARACTERISTIC, loop=loop
         )
-        self.listen_button = customtkinter.CTkButton(
-            self, text="Start Listen", font=self.fontSetting
+        self.listenButton = customtkinter.CTkButton(
+            self, text="Start Listen", font=self.fontSetting, command=self.start_listen
         )
         self.sendMessageLabel = customtkinter.CTkLabel(
             self, text="Send Message", font=self.fontSetting
         )
-        self.sendMessage = customtkinter.CTkEntry(self)
-        self.sendMessage.grid(row=4, column=0, padx=10, pady=(10, 0), sticky="we")
-
+        self.sendMessageEntry = customtkinter.CTkEntry(self)
         self.hexSend = customtkinter.CTkCheckBox(
             self, text="Hex", font=self.fontSetting
         )
@@ -53,12 +57,13 @@ class messageFram(customtkinter.CTkFrame):
         self.messageBox.grid(
             row=1, column=0, columnspan=2, padx=10, pady=(10, 0), sticky="news"
         )
-        self.listen_button.grid(
+        self.listenButton.grid(
             row=2, column=0, columnspan=2, padx=10, pady=(10, 0), sticky="ew"
         )
         self.sendMessageLabel.grid(
             row=3, column=0, columnspan=2, padx=10, pady=(10, 0), sticky="w"
         )
+        self.sendMessageEntry.grid(row=4, column=0, padx=10, pady=(10, 0), sticky="we")
         self.hexSend.grid(row=4, column=1, padx=10, pady=(10, 0), sticky="ew")
         self.sendButton.grid(
             row=6, column=0, columnspan=2, padx=10, pady=10, sticky="ew"
@@ -68,6 +73,14 @@ class messageFram(customtkinter.CTkFrame):
         # get value from entry and send it to the device
         message = self.sendMessage.get()
         print(message)
+
+    def start_listen(self):
+        self.device = self.master.device
+        if self.device == None:
+            log.info("No device select.")
+            return
+        self.serial_engine = Communication(self.device.device, 115200, 0.5, DEBUG=False)
+        threading.Thread(target=self.serial_engine.Recive_data).start()
 
 
 class messageBox(customtkinter.CTkScrollableFrame):

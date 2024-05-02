@@ -1,8 +1,11 @@
-from pickle import DICT
 import customtkinter
 import threading
-from bleak import BleakScanner, BleakClient
 import serial
+import structlog
+from bleak import BleakScanner, BleakClient
+
+
+log = structlog.get_logger()
 
 
 class deviceBox(customtkinter.CTkFrame):
@@ -39,7 +42,7 @@ class deviceBox(customtkinter.CTkFrame):
         self.deviceInfoLabel = customtkinter.CTkLabel(
             self, text="Device Info", font=self.fontSetting
         )
-        self.deviceInfoBox = BluetoothDeviceInfoBox(self)
+        self.deviceInfoBox = deviceInfoBox(self)
         self.connectButton = customtkinter.CTkButton(
             self, text="Connect", font=self.fontSetting
         )
@@ -66,11 +69,11 @@ class deviceBox(customtkinter.CTkFrame):
         if self.mode.get() == "BLE":
             self.mode.set("Serial")
             self.swichModeButton.configure(text="Serial")
-            print("switch toggled, current value:", self.mode.get())
+            log.info(f"Switch toggled, current value: {self.mode.get()}.")
         elif self.mode.get() == "Serial":
             self.mode.set("BLE")
             self.swichModeButton.configure(text="BLE")
-            print("Switch toggled, current value:", self.mode.get())
+            log.info(f"Switch toggled, current value: {self.mode.get()}.")
 
     def scan_Serial_Devices(self):
         for device_item in self.device_item_list:
@@ -87,18 +90,17 @@ class deviceBox(customtkinter.CTkFrame):
         self.devic_list = {}
         ports_list = list(serial.tools.list_ports.comports())
         for comport in ports_list:
-            print(comport[0], comport[1])
             self.add_item(comport[0])
 
     def scan_event(self):
         if self.SCAN_STATUS.get() == "Stopped":
-            print("Start scan")
+            log.info("Start scanning...")
             self.SCAN_STATUS.set("Scanning")
             self.scanButton.configure(text="Stop Scan Device")
             if self.mode.get() == "Serial":
                 self.scan_Serial_Devices()
         elif self.SCAN_STATUS.get() == "Scanning":
-            print("Stopping scan")
+            log.info("Scan finished/stopped.")
             self.SCAN_STATUS.set("Stopped")
             self.scanButton.configure(text="Start Scan Device")
             if self.mode.get() == "BLE":
@@ -119,18 +121,20 @@ class deviceBox(customtkinter.CTkFrame):
         # create multi line label about the info in device
         self.selected_device = device
         self.master.device = device
-        # print(device.description)
-        # print(device.device)
-        # print(device.hwid)
-        # print(device.interface)
-        # print(device.location)
-        # print(device.manufacturer)
-        # print(device.name)
-        # print(device.pid)
-        # print(device.product)
-        # print(device.serial_number)
-        # print(device.vid)
-        threading.Thread(target=self.deviceInfoBox.updateInfo, daemon=True).start()
+        log.info(device.description)
+        log.info(device.device)
+        log.info(device.hwid)
+        log.info(device.interface)
+        log.info(device.location)
+        log.info(device.manufacturer)
+        log.info(device.name)
+        log.info(device.pid)
+        log.info(device.product)
+        log.info(device.serial_number)
+        log.info(device.vid)
+        threading.Thread(
+            target=self.deviceInfoBox.updateInfo, args=(device), daemon=True
+        ).start()
 
 
 class BluetoothDevice(customtkinter.CTkFrame):
@@ -140,7 +144,7 @@ class BluetoothDevice(customtkinter.CTkFrame):
         self.label.grid(row=0, column=0, padx=10, pady=(10, 0), sticky="w")
 
 
-class BluetoothDeviceInfoBox(customtkinter.CTkFrame):
+class deviceInfoBox(customtkinter.CTkFrame):
     def __init__(self, master):
         super().__init__(master, height=180)
         self.grid_columnconfigure(0, weight=1)
@@ -155,12 +159,11 @@ class BluetoothDeviceInfoBox(customtkinter.CTkFrame):
 
     def fetch(self):
         self.selected_device = self.master.selected_device
-        self.des = customtkinter.StringVar(value=self.selected_device.description)
+        # self.des = customtkinter.StringVar(value=self.selected_device.description)
 
-    def updateInfo(self):
-        self.fetch()
-        selected_device = self.master.selected_device
-        self.info_label.configure(text=selected_device.description)
+    def updateInfo(self, comport):
+        log.info(comport)
+        self.info_label.configure(text=comport.description)
 
 
 class deviceFrame(customtkinter.CTkScrollableFrame):
@@ -183,6 +186,3 @@ class deviceFrame(customtkinter.CTkScrollableFrame):
 
     def get_checked_item(self):
         return self.device_variable.get()
-
-    def radio_button_event(self):
-        print("radiobutton toggled, current value:", self.device_variable.get())

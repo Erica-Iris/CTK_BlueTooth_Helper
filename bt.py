@@ -1,21 +1,23 @@
 import argparse
 import asyncio
-
+import structlog
 from bleak import BleakScanner
 
 
+log = structlog.get_logger()
+
+
 async def main(args: argparse.Namespace):
-    print("scanning for 5 seconds, please wait...")
+    log.info("Scanning for 5 seconds, please wait...")
 
     devices = await BleakScanner.discover(
         return_adv=True, cb=dict(use_bdaddr=args.macos_use_bdaddr)
     )
 
     for d, a in devices.values():
-        print()
-        print(d)
-        print("-" * len(str(d)))
-        print(a)
+        log.info(d)
+        log.info("-" * len(str(d)))
+        log.info(a)
 
 
 if __name__ == "__main__":
