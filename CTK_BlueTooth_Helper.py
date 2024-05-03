@@ -1,6 +1,6 @@
 """
 Servo control tool
-Author: 1ris_W()
+Author: 1ris_W
 Version: 0.1
 """
 
@@ -20,7 +20,7 @@ except Exception as e:
     os.system("pip install -r requirements.txt")
 
 customtkinter.set_appearance_mode("light")
-customtkinter.set_default_color_theme("./purple.json")
+customtkinter.set_default_color_theme("./assets/themes/purple.json")
 
 log = structlog.get_logger()
 
@@ -44,8 +44,10 @@ class App(customtkinter.CTk):
         self.title("Servo Testing Toolkit")
         self.width = int(self.winfo_screenwidth() / 2)
         self.height = int(self.winfo_screenheight() / 1.5)
-        self.geometry(f"{self.width}x{self.height}")
+        self.posx = int(self.winfo_screenwidth() / 2 - self.width / 2)
+        self.posy = int(self.winfo_screenheight() / 2 - self.height / 2)
         self.minsize(880, 800)
+        self.geometry(f"{self.width}x{self.height}+{self.posx}+{self.posy}")
 
         self.device = None
 
@@ -58,9 +60,9 @@ class App(customtkinter.CTk):
         self.controls_frame.grid(row=0, column=0, padx=(10, 0), pady=10, sticky="news")
         self.messageBox.grid(row=0, column=1, padx=(10, 0), pady=10, sticky="news")
         self.bluetoothBox.grid(row=0, column=2, padx=10, pady=10, sticky="news")
-        
+
         os.system("clear")
-        
+
         log.info("App loadding done.")
 
 
@@ -68,3 +70,4 @@ loop = asyncio.get_event_loop()
 app = App(loop)
 loop.run_forever()
 app.mainloop()
+app.quit()
