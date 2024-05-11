@@ -3,6 +3,7 @@ import time
 import serial
 import struct
 import structlog
+import serial.tools.list_ports
 
 
 log = structlog.get_logger()
@@ -111,7 +112,7 @@ if __name__ == "__main__":
     Communication.Print_Used_Com()
     Ret = False  # 是否创建成功标志
 
-    Engine1 = Communication("/dev/cu.usbserial-111420", 9600, 0.5)
+    Engine1 = Communication("/dev/cu.usbserial-11410", 115200, 0.5)
     if Ret:
         # Engine1.Recive_data(1)
         Engine1.Print_Used_Com()

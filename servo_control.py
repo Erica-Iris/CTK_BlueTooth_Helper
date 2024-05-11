@@ -12,7 +12,7 @@ log = structlog.get_logger()
 
 class servo_control_row(customtkinter.CTkFrame):
     def __init__(self, master, servo_id: int):
-        super().__init__(master, width=310)
+        super().__init__(master, width=310, fg_color="grey81")
 
         self.fontSetting = master.fontSetting
 
@@ -22,7 +22,7 @@ class servo_control_row(customtkinter.CTkFrame):
 
         # 打开串口通信
         self.serial_engine = Communication(
-            "/dev/cu.usbserial-11120", 115200, 0.5, DEBUG=False
+            "/dev/cu.usbserial-111420", 115200, 0.5, DEBUG=False
         )
 
         self.grid_columnconfigure((0, 1, 2), weight=1)

@@ -29,7 +29,7 @@ class App(customtkinter.CTk):
 
     DIRPATH = os.path.join(os.path.dirname(__file__))
 
-    def __init__(self, loop: asyncio.AbstractEventLoop):
+    def __init__(self):
         super().__init__()
         if sys.platform.startswith("win"):
             self.font = "Segoe UI"
@@ -54,7 +54,7 @@ class App(customtkinter.CTk):
         self.controls_frame = controlsFrame(
             self, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
         )
-        self.messageBox = messageFram(self, loop)
+        self.messageBox = messageFram(self)
         self.bluetoothBox = deviceBox(self)
 
         self.controls_frame.grid(row=0, column=0, padx=(10, 0), pady=10, sticky="news")
@@ -66,8 +66,8 @@ class App(customtkinter.CTk):
         log.info("App loadding done.")
 
 
-loop = asyncio.get_event_loop()
-app = App(loop)
-loop.run_forever()
+# loop = asyncio.get_event_loop()
+app = App()
+# loop.run_forever()
 app.mainloop()
 app.quit()

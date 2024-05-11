@@ -1,4 +1,4 @@
-import customtkinter
+import customtkinter as ctk
 import threading
 import serial
 import structlog
@@ -8,15 +8,15 @@ from bleak import BleakScanner, BleakClient
 log = structlog.get_logger()
 
 
-class deviceBox(customtkinter.CTkFrame):
+class deviceBox(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master)
 
         self.fontSetting = master.fontSetting
 
-        self.SCAN_STATUS = customtkinter.StringVar(value="Stopped")
-        self.mode = customtkinter.StringVar(value="Serial")
-        self.devic_list = {}
+        self.SCAN_STATUS = ctk.StringVar(value="Stopped")
+        self.mode = ctk.StringVar(value="Serial")
+        self.device_list = {}
         self.device_item_list = {}
         self.selected_device = None
 
@@ -26,28 +26,27 @@ class deviceBox(customtkinter.CTkFrame):
         self.grid_rowconfigure(1, weight=1)
         self.grid_rowconfigure((0, 2, 3), weight=0)
 
-        self.devicesLabel = customtkinter.CTkLabel(
-            self, text="Devices", font=self.fontSetting
+        self.deviceLabel = ctk.CTkLabel(self, text="Devices", font=self.fontSetting)
+        self.swichModeButton = ctk.CTkSwitch(
+            self,
+            text=self.mode.get(),
+            command=self.switch_toggle,
+            font=self.fontSetting,
         )
-        self.swichModeButton = customtkinter.CTkSwitch(
-            self, text=self.mode.get(), command=self.switch_event, font=self.fontSetting
-        )
-        self.deviceItemBox = deviceFrame(master=self, item_list=self.devic_list)
-        self.scanButton = customtkinter.CTkButton(
+        self.deviceItemBox = deviceFrame(master=self)
+        self.scanButton = ctk.CTkButton(
             self,
             text="Start Scan Device",
             font=self.fontSetting,
             command=self.scan_event,
         )
-        self.deviceInfoLabel = customtkinter.CTkLabel(
+        self.deviceInfoLabel = ctk.CTkLabel(
             self, text="Device Info", font=self.fontSetting
         )
         self.deviceInfoBox = deviceInfoBox(self)
-        self.connectButton = customtkinter.CTkButton(
-            self, text="Connect", font=self.fontSetting
-        )
+        self.connectButton = ctk.CTkButton(self, text="Connect", font=self.fontSetting)
 
-        self.devicesLabel.grid(row=0, column=0, padx=10, pady=(10, 0), sticky="nws")
+        self.deviceLabel.grid(row=0, column=0, padx=10, pady=(10, 0), sticky="nws")
         self.swichModeButton.grid(row=0, column=1, padx=10, pady=(10, 0), sticky="nws")
         self.deviceItemBox.grid(
             row=1, column=0, columnspan=2, padx=10, pady=(10, 0), sticky="news"
@@ -65,7 +64,7 @@ class deviceBox(customtkinter.CTkFrame):
             row=5, column=0, columnspan=2, padx=10, pady=10, sticky="ews"
         )
 
-    def switch_event(self):
+    def switch_toggle(self):
         if self.mode.get() == "BLE":
             self.mode.set("Serial")
             self.swichModeButton.configure(text="Serial")
@@ -73,43 +72,47 @@ class deviceBox(customtkinter.CTkFrame):
         elif self.mode.get() == "Serial":
             self.mode.set("BLE")
             self.swichModeButton.configure(text="BLE")
+
+    def scan_event(self):
+        self.toggle_scan_status()
+        if self.mode.get() == "Serial":
+            self.scan_Serial_Devices()
+        elif self.mode.get() == "BLE":
+            self.scan_BLE_Devices()
             log.info(f"Switch toggled, current value: {self.mode.get()}.")
 
     def scan_Serial_Devices(self):
-        for device_item in self.device_item_list:
-            device_item.forgetgrid()
-
+        log.info(self.device_list)
+        self.deviceItemBox.remove_all()
         ports_list = list(serial.tools.list_ports.comports())
 
         for comport in ports_list:
-            self.devic_list[comport.name] = comport
-            self.add_item(comport.name)
-        self.scan_event()
+            self.device_list[comport.name] = comport
+            self.deviceItemBox.add_item(comport.name)
+
+        self.toggle_scan_status()
 
     def scan_BLE_Devices(self):
-        self.devic_list = {}
+        self.device_list = {}
         ports_list = list(serial.tools.list_ports.comports())
         for comport in ports_list:
             self.add_item(comport[0])
 
-    def scan_event(self):
+    def toggle_scan_status(self):
         if self.SCAN_STATUS.get() == "Stopped":
             log.info("Start scanning...")
             self.SCAN_STATUS.set("Scanning")
             self.scanButton.configure(text="Stop Scan Device")
-            if self.mode.get() == "Serial":
-                self.scan_Serial_Devices()
         elif self.SCAN_STATUS.get() == "Scanning":
             log.info("Scan finished/stopped.")
             self.SCAN_STATUS.set("Stopped")
             self.scanButton.configure(text="Start Scan Device")
-            if self.mode.get() == "BLE":
-                self.scan_BLE_Devices()
 
     def add_item(self, name):
-        self.device_item_list[name] = customtkinter.CTkButton(
+        self.device_item_list[name] = ctk.CTkButton(
             self.deviceItemBox,
             text=name,
+            fg_color="gray65",
             command=lambda: threading.Thread(
                 target=self.select_device_handle, args=(name,), daemon=True
             ).start(),
@@ -117,7 +120,7 @@ class deviceBox(customtkinter.CTkFrame):
         self.device_item_list[name].pack(expand=True, fill="x", padx=5, pady=5)
 
     def select_device_handle(self, name):
-        device = self.devic_list[name]
+        device = self.device_list[name]
         # create multi line label about the info in device
         self.selected_device = device
         self.master.device = device
@@ -132,27 +135,18 @@ class deviceBox(customtkinter.CTkFrame):
         log.info(device.product)
         log.info(device.serial_number)
         log.info(device.vid)
-        threading.Thread(
-            target=self.deviceInfoBox.updateInfo, args=(device), daemon=True
-        ).start()
+        threading.Thread(target=self.deviceInfoBox.updateInfo, daemon=True).start()
 
 
-class BluetoothDevice(customtkinter.CTkFrame):
-    def __init__(self, master):
-        super().__init__(master)
-        self.label = customtkinter.CTkLabel(self, text="Device")
-        self.label.grid(row=0, column=0, padx=10, pady=(10, 0), sticky="w")
-
-
-class deviceInfoBox(customtkinter.CTkFrame):
+class deviceInfoBox(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master, height=180)
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=0)
 
-        self.des = customtkinter.StringVar()
+        self.des = ctk.StringVar()
 
-        self.info_label = customtkinter.CTkLabel(
+        self.info_label = ctk.CTkLabel(
             self, text="No Device Selected", textvariable=self.des
         )
         self.info_label.grid(row=0, column=0, padx=10, pady=10, sticky="w")
@@ -161,28 +155,25 @@ class deviceInfoBox(customtkinter.CTkFrame):
         self.selected_device = self.master.selected_device
         # self.des = customtkinter.StringVar(value=self.selected_device.description)
 
-    def updateInfo(self, comport):
-        log.info(comport)
-        self.info_label.configure(text=comport.description)
+    def updateInfo(self):
+        log.info("Updating device info not implemented yet.")
 
 
-class deviceFrame(customtkinter.CTkScrollableFrame):
-    def __init__(self, master, item_list, command=None, **kwargs):
+class deviceFrame(ctk.CTkScrollableFrame):
+    def __init__(self, master, command=None, **kwargs):
         super().__init__(master, height=180, **kwargs)
         self.command = command
         self.device_list = []
-        self.device_variable = customtkinter.StringVar()
-        for i, item in enumerate(item_list):
-            self.add_item(item)
+        self.device_variable = ctk.StringVar()
 
-    def add_item(self, item):
-        radioButton = customtkinter.CTkRadioButton(
-            self, text=item, variable=self.device_variable, value=item
-        )
-        radioButton.grid(
-            row=len(self.device_list), column=0, padx=10, pady=10, sticky="w"
-        )
-        self.device_list.append(radioButton)
+    def add_item(self, name):
+        button = ctk.CTkButton(self, text=name, fg_color="gray65")
+        button.grid(row=len(self.device_list), column=0, sticky="ew")
 
-    def get_checked_item(self):
-        return self.device_variable.get()
+    def remove_all(self):
+        log.info("Removing all devices...")
+        for device in self.device_list:
+            device.destroy()
+            log.info(f"Removeing {device.name}...")
+        self.device_list = []
+        log.info("All devices removed.")

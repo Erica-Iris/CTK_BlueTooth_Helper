@@ -16,7 +16,7 @@ log = structlog.get_logger()
 
 
 class messageFram(customtkinter.CTkFrame):
-    def __init__(self, master, loop):
+    def __init__(self, master):
         super().__init__(master)
         self.fontSetting = master.fontSetting
 
@@ -35,7 +35,7 @@ class messageFram(customtkinter.CTkFrame):
             self, text="MessageBox", font=self.fontSetting
         )
         self.messageBox = messageBox(
-            self, address=ADDRESS, characteristic=CHARACTERISTIC, loop=loop
+            self, address=ADDRESS, characteristic=CHARACTERISTIC
         )
         self.listenButton = customtkinter.CTkButton(
             self, text="Start Listen", font=self.fontSetting, command=self.start_listen
@@ -44,9 +44,7 @@ class messageFram(customtkinter.CTkFrame):
             self, text="Send Message", font=self.fontSetting
         )
         self.sendMessageEntry = customtkinter.CTkEntry(self)
-        self.hexSend = customtkinter.CTkCheckBox(
-            self, text="Hex", font=self.fontSetting
-        )
+
         self.sendButton = customtkinter.CTkButton(
             self, text="Send Message", command=self.send_msg, font=self.fontSetting
         )
@@ -64,7 +62,7 @@ class messageFram(customtkinter.CTkFrame):
             row=3, column=0, columnspan=2, padx=10, pady=(10, 0), sticky="w"
         )
         self.sendMessageEntry.grid(row=4, column=0, padx=10, pady=(10, 0), sticky="we")
-        self.hexSend.grid(row=4, column=1, padx=10, pady=(10, 0), sticky="ew")
+        # self.hexSend.grid(row=4, column=1, padx=10, pady=(10, 0), sticky="ew")
         self.sendButton.grid(
             row=6, column=0, columnspan=2, padx=10, pady=10, sticky="ew"
         )
@@ -87,7 +85,6 @@ class messageBox(customtkinter.CTkScrollableFrame):
     def __init__(
         self,
         master,
-        loop,
         interval=1 / 60,
         address=ADDRESS,
         characteristic=CHARACTERISTIC,
@@ -107,9 +104,6 @@ class messageBox(customtkinter.CTkScrollableFrame):
         self.msg_pointer = 0
 
         self.tasks = []
-        self.tasks.append(loop.create_task(self.run_ble_client(self.message_queue)))
-        self.tasks.append(loop.create_task(self.run_queue_consumer(self.message_queue)))
-        self.tasks.append(loop.create_task(self.updater(interval)))
 
         self.client = None
 
